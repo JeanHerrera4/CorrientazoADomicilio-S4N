@@ -1,4 +1,11 @@
-package co.com.scaladrone.modelling.dominio.entities
+package co.com.scaladrone.modelling.dominio.entidades
+
+case class Coordenada(x:Int, y:Int)
+case class Orden(movimientos:List[Instruccion])
+case class Recorrido(pedidos:List[Orden])
+case class Periplo(rutas:List[Recorrido])
+
+case class Drone (posicionActual: EstadoDrone, capacidad: Int)
 
 trait Instruccion
 
@@ -28,6 +35,7 @@ object Orientacion {
       case 'E' => E()
       case 'O' => O()
       case _ => throw new  Exception(s"Caracter invalido para segumiento de orientacion: $c")
+      //Modelar en un Try las excepciones y tinen que ser privadas
     }
   }
 }
@@ -37,12 +45,4 @@ case class S() extends Orientacion
 case class E() extends Orientacion
 case class O() extends Orientacion
 
-case class Coordenada (x: Int, y: Int)
-
-trait UbicacionDrone{
-  val orientacion: Orientacion
-  val coordenada: Coordenada
-}
-
-case class EstadoDrone(coordenada: Coordenada, orientacion: Orientacion) extends UbicacionDrone
-
+case class EstadoDrone(coordenada: Coordenada, orientacion: Orientacion)

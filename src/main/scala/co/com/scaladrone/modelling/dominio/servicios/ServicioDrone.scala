@@ -1,12 +1,13 @@
-package co.com.scaladrone.modelling.dominio.services
+package co.com.scaladrone.modelling.dominio.servicios
 
-import co.com.scaladrone.modelling.dominio.entities._
+import co.com.scaladrone.modelling.dominio.entidades._
 
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.collection.immutable
 import scala.io.Source
 
-// Algebra del API
+// Necesidad del Drone al cual se le va a aplicar las funciones y la lógica
+// Cohesión en servicio (Servicios diferentes)
+// Mejor girar que girar derecha e izquierda (Sugerencia)
 
 
 sealed trait AlgebraServicioDrone {
@@ -14,12 +15,13 @@ sealed trait AlgebraServicioDrone {
   def girarDerecha(estadoDrone: EstadoDrone): EstadoDrone
   def avanzar(estadoDrone: EstadoDrone): EstadoDrone
   def mover(instruccion: Instruccion, estadoDrone: EstadoDrone): EstadoDrone
-  def charToInstruccion(s: String): List[Instruccion]
-  //def entrega(listaInstrucciones: List[Instruccion]) :
-  def leerArchivo(): List[String]
+  def realizarEntrega(listaInstrucciones: List[Instruccion]): EstadoDrone
+  def realizarEntregas(listasInstrucciones: List[List[Instruccion]]): List[EstadoDrone]
 }
 
   sealed trait InterpretacionAlgebraServicioDrone extends AlgebraServicioDrone{
+
+    val estadoInicial = EstadoDrone(Coordenada(0,0),N())
 
     override def girarDerecha(estadoDrone: EstadoDrone): EstadoDrone = {
       val x = estadoDrone.orientacion match{
@@ -70,49 +72,29 @@ sealed trait AlgebraServicioDrone {
       }
     }
 
-    override def charToInstruccion(s: String): List[Instruccion] = {
-      val caracteresIntruccion = s.toList
-      caracteresIntruccion.map(x => Instruccion.newInstruccion(x))
+   override def realizarEntrega(listaInstrucciones: List[Instruccion]): EstadoDrone = {
+
+      listaInstrucciones
+        .foldLeft(EstadoDrone(Coordenada(0,0), N()))((estado, instru) => mover(instru, estado))
     }
 
-    override def leerArchivo(): List[String] = {
-      val fileStream = getClass.getResourceAsStream("/in/in01.txt")
-      val lineas: List[String] = Source.fromInputStream(fileStream).getLines.toList
-      println(lineas)
-      lineas
-    }
+    override def realizarEntregas(listasInstrucciones: List[List[Instruccion]]): List[EstadoDrone] = {
 
-    //override def entrega(listaInstrucciones: List[Instruccion]): Unit = ???
+      val res = listasInstrucciones.foldLeft(List(EstadoDrone(Coordenada(0,0), N()))){
+        (listEstado, listInstruccion) =>
+          listEstado :+ listEstado.flatMap(x => realizarEntrega(listInstruccion))
+            //resultado.map(x => realizarEntrega(item))
+
+      }
+        res
+        /*.foldLeft(EstadoDrone(Coordenada(0, 0), N())){
+        (estado,listaInstru) => realizarEntrega(listaInstru)
+      }*/
+
+    }
 
 }
 
 // Trait Object
 object InterpretacionAlgebraServicioDrone extends InterpretacionAlgebraServicioDrone
 
-
-
-//Interpretacion del algebra
-/*sealed trait InterpretacionServicioDrone extends AlgebraServicioDrone{
-
-  override def tarifar(poliza:Poliza):Future[Tarifa] = {
-    Future.successful(Tarifa(1000))
-  }
-
-  override def consultarPoliza(numero:String):Future[Poliza] = {
-    Future(Poliza(numero, List(Cobertura("1", "1.1"))))
-  }
-
-  override def adicionarCobertura(cobertura:Cobertura, poliza:Poliza): Future[Poliza] = {
-    Future{
-      Poliza(poliza.numero, cobertura::poliza.coberturas)
-    }
-  }
-
-  override def crearCobertura(cdgarantia: String, cdsubgarantia:String): Future[Cobertura] = Future{
-    Cobertura(cdgarantia, cdsubgarantia)
-  }
-}
-
-// Trait Object
-object InterpretacionServicioDrone extends InterpretacionServicioDrone
-*/

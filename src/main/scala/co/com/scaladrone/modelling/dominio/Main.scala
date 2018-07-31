@@ -1,33 +1,29 @@
 package co.com.scaladrone.modelling.dominio
 
-import co.com.scaladrone.modelling.dominio.entities._
-import co.com.scaladrone.modelling.dominio.services.InterpretacionAlgebraServicioDrone
+import co.com.scaladrone.modelling.dominio.entidades.{Coordenada, EstadoDrone, N}
+import co.com.scaladrone.modelling.dominio.servicios.InterpretacionAlgebraServicioDrone
+import co.com.scaladrone.modelling.dominio.servicios.InterpretacionAlgebraServicioArchivo
 
 object Main extends App {
 
-  val hola = "AAAAIAAD"
+  // Función del servicio Drone: Recibir el in txt y entregar el out txt
 
-  val res10 = InterpretacionAlgebraServicioDrone.charToInstruccion(hola)
-
+  val prueba = "DDAIAD"
   var estadoActual: EstadoDrone = new EstadoDrone(Coordenada(0,0),N())
 
-  res10.foreach(x =>  estadoActual = InterpretacionAlgebraServicioDrone.mover(x,estadoActual))
+  val res1 = InterpretacionAlgebraServicioArchivo.caracterAInstruccion(prueba)
 
-  val texto = InterpretacionAlgebraServicioDrone.leerArchivo()
-  println(texto)
+  println("----------------------------------+")
+  val res2 = InterpretacionAlgebraServicioDrone.realizarEntrega(res1)
+  println(res2)
 
-  //println(res10)
+  println("----------------------------------")
+  val res3 = InterpretacionAlgebraServicioArchivo.leerArchivo("/home/s4n/Documents/scala-drone/src/main/resources/in01.txt")
+  println(res3)
 
-  /*val estadoInicial: EstadoDrone = new EstadoDrone(Coordenada(0,0),N())
-
-  val res = InterpretacionAlgebraServicioDrone.girarDerecha(estadoInicial)
-  val res2 = InterpretacionAlgebraServicioDrone.avanzar(res)
-  val res3 = InterpretacionAlgebraServicioDrone.girarDerecha(res2)
-  val res4 = InterpretacionAlgebraServicioDrone.avanzar(res3)
-  //println(res4)
-
-  val res9 = InterpretacionAlgebraServicioDrone.mover(I(), estadoInicial)
-  //println(res9)*/
-
+  println("----------------------------------")
+  val res4 = InterpretacionAlgebraServicioArchivo.archivoAListaInstrucciones(res3)
+  val res5 = InterpretacionAlgebraServicioDrone.realizarEntregas(res4)
+  println(res5)
 
 }
