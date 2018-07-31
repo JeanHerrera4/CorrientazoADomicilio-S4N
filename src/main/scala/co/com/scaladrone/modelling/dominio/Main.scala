@@ -14,7 +14,7 @@ object Main extends App {
   val res1 = InterpretacionAlgebraServicioArchivo.caracterAInstruccion(prueba)
 
   println("----------------------------------+")
-  val res2 = InterpretacionAlgebraServicioDrone.realizarEntrega(res1)
+  val res2 = InterpretacionAlgebraServicioDrone.realizarEntrega(res1, EstadoDrone(Coordenada(0,0),N()))
   println(res2)
 
   println("----------------------------------")
@@ -23,7 +23,7 @@ object Main extends App {
 
   println("----------------------------------")
   val res4 = InterpretacionAlgebraServicioArchivo.archivoAListaInstrucciones(res3)
-  val res5 = InterpretacionAlgebraServicioDrone.realizarEntregas(res4)
+  val res5 = InterpretacionAlgebraServicioDrone.realizarEntregas(res4, List(EstadoDrone(Coordenada(0,0),N())))
   println(res5)
 
 }

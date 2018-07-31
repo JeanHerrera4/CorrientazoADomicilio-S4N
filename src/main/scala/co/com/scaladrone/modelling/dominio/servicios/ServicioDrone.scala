@@ -15,8 +15,8 @@ sealed trait AlgebraServicioDrone {
   def girarDerecha(estadoDrone: EstadoDrone): EstadoDrone
   def avanzar(estadoDrone: EstadoDrone): EstadoDrone
   def mover(instruccion: Instruccion, estadoDrone: EstadoDrone): EstadoDrone
-  def realizarEntrega(listaInstrucciones: List[Instruccion]): EstadoDrone
-  def realizarEntregas(listasInstrucciones: List[List[Instruccion]]): List[EstadoDrone]
+  def realizarEntrega(listaInstrucciones: List[Instruccion], estadoDrone: EstadoDrone): EstadoDrone
+  def realizarEntregas(listasInstrucciones: List[List[Instruccion]], estadoDrone: List[EstadoDrone]): List[EstadoDrone]
 }
 
   sealed trait InterpretacionAlgebraServicioDrone extends AlgebraServicioDrone{
@@ -72,25 +72,19 @@ sealed trait AlgebraServicioDrone {
       }
     }
 
-   override def realizarEntrega(listaInstrucciones: List[Instruccion]): EstadoDrone = {
+   override def realizarEntrega(listaInstrucciones: List[Instruccion], estadoDrone: EstadoDrone): EstadoDrone = {
 
       listaInstrucciones
-        .foldLeft(EstadoDrone(Coordenada(0,0), N()))((estado, instru) => mover(instru, estado))
+        .foldLeft(estadoDrone)((estado, instru) => mover(instru, estado))
     }
 
-    override def realizarEntregas(listasInstrucciones: List[List[Instruccion]]): List[EstadoDrone] = {
+    override def realizarEntregas(listasInstrucciones: List[List[Instruccion]], estadoDrone: List[EstadoDrone]): List[EstadoDrone] = {
 
-      val res = listasInstrucciones.foldLeft(List(EstadoDrone(Coordenada(0,0), N()))){
+      val res = listasInstrucciones.foldLeft(estadoDrone){
         (listEstado, listInstruccion) =>
-          listEstado :+ listEstado.flatMap(x => realizarEntrega(listInstruccion))
-            //resultado.map(x => realizarEntrega(item))
-
+              listEstado :+ realizarEntrega(listInstruccion, listEstado.last)
       }
         res
-        /*.foldLeft(EstadoDrone(Coordenada(0, 0), N())){
-        (estado,listaInstru) => realizarEntrega(listaInstru)
-      }*/
-
     }
 
 }
