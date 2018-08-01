@@ -1,14 +1,16 @@
 package co.com.scaladrone.modelling.dominio.servicios
 
-import co.com.scaladrone.modelling.dominio.entidades.{EstadoDrone, Instruccion}
+import co.com.scaladrone.modelling.dominio.entidades.{Entrega, EstadoDrone, Instruccion, Ruta}
 
 import scala.io.Source
+import scala.util.Try
 
 sealed trait AlgebraServicioArchivo {
 
   def leerArchivo(url: String): List[String]
-  def caracterAInstruccion(cadena: String): List[Instruccion]
-  def archivoAListaInstrucciones(cadenaString: List[String]): List[List[Instruccion]]
+  def caracterAInstruccion(cadena: String): Entrega
+  def archivoAListaInstrucciones(cadenaString: List[String]): Try[Ruta]
+  //def exportarArchivo()
 }
 
 sealed trait InterpretacionAlgebraServicioArchivo extends AlgebraServicioArchivo {
@@ -18,14 +20,16 @@ sealed trait InterpretacionAlgebraServicioArchivo extends AlgebraServicioArchivo
     fuente.getLines.toList
   }
 
-  override def caracterAInstruccion(cadena: String): List[Instruccion] = {
+  override def caracterAInstruccion(cadena: String): Entrega = {
     val caracteresIntruccion = cadena.toList
-    caracteresIntruccion.map(x => Instruccion.newInstruccion(x))
+    Entrega(caracteresIntruccion.map(x => Instruccion.newInstruccion(x)))
   }
 
-  override def archivoAListaInstrucciones(listaString: List[String]): List[List[Instruccion]] = {
-    listaString.map(x => x.toList.map(y => Instruccion.newInstruccion(y)))
+  override def archivoAListaInstrucciones(listaString: List[String]): Try[Ruta] = {
+    Try(Ruta(listaString.map(x => Entrega(x.toList.map(y => Instruccion.newInstruccion(y))))))
   }
+
+  //override def exportarArchivo(): Unit
 
 }
 

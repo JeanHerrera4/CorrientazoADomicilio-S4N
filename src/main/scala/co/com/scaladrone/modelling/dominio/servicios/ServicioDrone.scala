@@ -4,6 +4,7 @@ import co.com.scaladrone.modelling.dominio.entidades._
 
 import scala.collection.immutable
 import scala.io.Source
+import scala.util.Try
 
 // Necesidad del Drone al cual se le va a aplicar las funciones y la lógica
 // Cohesión en servicio (Servicios diferentes)
@@ -11,82 +12,85 @@ import scala.io.Source
 
 
 sealed trait AlgebraServicioDrone {
-  def girarIzquierda(estadoDrone: EstadoDrone): EstadoDrone
-  def girarDerecha(estadoDrone: EstadoDrone): EstadoDrone
-  def avanzar(estadoDrone: EstadoDrone): EstadoDrone
-  def mover(instruccion: Instruccion, estadoDrone: EstadoDrone): EstadoDrone
-  def realizarEntrega(listaInstrucciones: List[Instruccion], estadoDrone: EstadoDrone): EstadoDrone
-  def realizarEntregas(listasInstrucciones: List[List[Instruccion]], estadoDrone: List[EstadoDrone]): List[EstadoDrone]
+  def girarIzquierda(drone: Drone): Drone
+  def girarDerecha(drone: Drone): Drone
+  def avanzar(drone: Drone): Drone
+  def mover(instruccion: Instruccion, drone: Drone): Drone
+  def realizarEntrega(entrega: Entrega, drone: Drone): Drone
+  def realizarEntregas(ruta: Ruta, drone: Drone): List[Drone]
 }
 
   sealed trait InterpretacionAlgebraServicioDrone extends AlgebraServicioDrone{
 
     val estadoInicial = EstadoDrone(Coordenada(0,0),N())
 
-    override def girarDerecha(estadoDrone: EstadoDrone): EstadoDrone = {
-      val x = estadoDrone.orientacion match{
+    override def girarDerecha(drone: Drone): Drone = {
+      val x = drone.posicionActual.orientacion match{
         case N() => E()
         case S() => O()
         case E() => S()
         case O() => N()
       }
-      val res = EstadoDrone(estadoDrone.coordenada,x)
+      val res = Drone(EstadoDrone(drone.posicionActual.coordenada, x))
       //println(res)
       res
     }
 
-    override def girarIzquierda(estadoDrone: EstadoDrone): EstadoDrone = {
-      val x = estadoDrone.orientacion match {
+    override def girarIzquierda(drone: Drone): Drone = {
+      val x = drone.posicionActual.orientacion match {
         case N() => O()
         case S() => E()
         case E() => N()
         case O() => S()
       }
-      val res = EstadoDrone(estadoDrone.coordenada,x)
+      val res = Drone(EstadoDrone(drone.posicionActual.coordenada, x))
       //println(res)
       res
     }
 
-    override def avanzar(estadoDrone: EstadoDrone): EstadoDrone = {
-      val x = estadoDrone.coordenada.x
-      val y = estadoDrone.coordenada.y
+    override def avanzar(drone: Drone): Drone = {
+      val x = drone.posicionActual.coordenada.x
+      val y = drone.posicionActual.coordenada.y
 
-      val xy = estadoDrone.orientacion match {
+      val xy = drone.posicionActual.orientacion match {
         case N() => Coordenada(x,y+1)
         case S() => Coordenada(x, y-1)
         case E() => Coordenada(x+1, y)
         case O() => Coordenada(x-1, y)
       }
-      val res = EstadoDrone(xy, estadoDrone.orientacion)
+      val res = Drone(EstadoDrone(xy, drone.posicionActual.orientacion))
       //println(res)
       res
     }
 
-    override def mover(instruccion: Instruccion, estadoDrone: EstadoDrone): EstadoDrone = {
+    override def mover(instruccion: Instruccion, drone: Drone): Drone = {
 
       instruccion match {
-        case A() => avanzar(estadoDrone)
-        case D() => girarDerecha(estadoDrone)
-        case I() => girarIzquierda(estadoDrone)
+        case A() => avanzar(drone)
+        case D() => girarDerecha(drone)
+        case I() => girarIzquierda(drone)
         case _ => throw new Exception(s"Caracter invalido para creacion de instruccion")
       }
     }
 
-   override def realizarEntrega(listaInstrucciones: List[Instruccion], estadoDrone: EstadoDrone): EstadoDrone = {
+   override def realizarEntrega(entrega: Entrega, drone: Drone): Drone = {
 
-      listaInstrucciones
-        .foldLeft(estadoDrone)((estado, instru) => mover(instru, estado))
+      entrega
+        .movimientos
+        .foldLeft(drone)((estado, instru) => mover(instru, estado))
+
     }
 
-    override def realizarEntregas(listasInstrucciones: List[List[Instruccion]], estadoDrone: List[EstadoDrone]): List[EstadoDrone] = {
+    override def realizarEntregas(ruta: Ruta, drone: Drone): List[Drone] = {
 
-      val res = listasInstrucciones.foldLeft(estadoDrone){
-        (listEstado, listInstruccion) =>
-              listEstado :+ realizarEntrega(listInstruccion, listEstado.last)
+      val droneL: List[Drone] = List(drone)
+
+      val res = ruta.pedidos.foldLeft(droneL){
+        (listaEstados, listaInstrucciones) =>
+          listaEstados :+ realizarEntrega(listaInstrucciones, listaEstados.last)
       }
         res
     }
-
 }
 
 // Trait Object
