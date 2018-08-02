@@ -20,9 +20,10 @@ sealed trait AlgebraServicioDrone {
   def avanzar(drone: Drone): Drone
   def mover(instruccion: Instruccion, drone: Drone): Drone
   def realizarEntrega(entrega: Entrega, drone: Drone): Drone
-  def realizarEntregas(ruta: Ruta, drone: Drone): List[Drone]
-  //def realizarPedidos(periplo: Periplo, drone: Drone): Future[List[List[Drone]]]
+  def realizarEntregas(ruta: Ruta, drone: Drone): Future[List[Drone]]
+  def realizarPedidos(periplo: Periplo): List[Future[List[Drone]]]
   def entregarAlmuerzos(url: String)
+  def enviarDomicilios(listaUrl: List[String])
 }
 
   sealed trait InterpretacionAlgebraServicioDrone extends AlgebraServicioDrone{
@@ -115,27 +116,28 @@ sealed trait AlgebraServicioDrone {
 
    override def realizarEntrega(entrega: Entrega, drone: Drone): Drone = {
 
+     /*entrega
+       .movimientos
+       .scanLeft(drone)((estado, instru) => mover(instru, estado))*/
+
       entrega
         .movimientos
         .foldLeft(drone)((estado, instru) => mover(instru, estado))
 
     }
 
-    override def realizarEntregas(ruta: Ruta, drone: Drone): List[Drone] = {
+    override def realizarEntregas(ruta: Ruta, drone: Drone): Future[List[Drone]] = {
 
-      ruta.pedidos.scanLeft(drone)((x,y) => realizarEntrega(y,x)).tail
+      Future(ruta.pedidos.scanLeft(drone)((x,y) => realizarEntrega(y,x)).tail)
 
     }
     implicit val ecParaRealizarPedidos = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(20))
 
-    /*override def realizarPedidos(lista: List[Try[Ruta]]): List[Future[List[Drone]]] = {
-      val rutasCorrectas = lista.filter(x => x == Success)
-      val identificacionDrone: List[Int] = Range(1 to rutasCorrectas.size)
-      val rutasConIdentificacionDrones = rutasCorrectas.zip(identificacionDrone)
-      rutasConIdentificacionDrones.map(x => x.)
-
-      //Future(periplo.rutas.scanLeft(drone)((x,y) => realizarEntregas(y,x)).tail)
-    }*/
+    override def realizarPedidos(periplo: Periplo): List[Future[List[Drone]]] = {
+      val x:List[Int] = Range(1, periplo.rutas.size + 1).toList
+      val y = periplo.rutas.zip(x)
+      y.map(x => realizarEntregas(x._1, Drone(x._2, EstadoDrone(Coordenada(0,0),N()),10)))
+    }
 
     override def entregarAlmuerzos(url: String): Unit = {
 
@@ -146,7 +148,16 @@ sealed trait AlgebraServicioDrone {
       val res1 = InterpretacionAlgebraServicioArchivo.archivoAListaInstrucciones(a)
       val res2 = res1.fold[List[Drone]](x=>{List(Drone(1,EstadoDrone(Coordenada(0,0),N()),10))}, y=>{InterpretacionAlgebraServicioDrone.realizarEntregas(y, droneInicial)})
       val res3 = InterpretacionAlgebraServicioArchivo.exportarArchivo(res2)
+    }
 
+    override def enviarDomicilios(listaUrl: List[String]): Unit = {
+      val droneInicial = Drone(1,EstadoDrone(Coordenada(0,0),N()),10)
+      var estadoActual: EstadoDrone = new EstadoDrone(Coordenada(0,0),N())
+
+      val a = InterpretacionAlgebraServicioArchivo.leerArchivos(listaUrl)
+      val res1 = InterpretacionAlgebraServicioArchivo.archivosAListasInstrucciones(a)
+      val res2 = res1.fold[List[List[Drone]]](x=>{List(List(Drone(1,EstadoDrone(Coordenada(0,0),N()),10)))}, y=>{InterpretacionAlgebraServicioDrone.realizarPedidos(y)})
+      val res3 = InterpretacionAlgebraServicioArchivo.exportarArchivos(res2)
     }
 
 }

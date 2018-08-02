@@ -16,7 +16,7 @@ object Instruccion {
       case 'A' => A()
       case 'D' => D()
       case 'I' => I()
-      case _ => throw new Exception(s"Caracter invalido para creacion de instruccion: $c")
+      //case _ => throw new Exception(s"Caracter invalido para creacion de instruccion: $c")
     }
   }
 }

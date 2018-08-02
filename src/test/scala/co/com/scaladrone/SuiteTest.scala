@@ -64,7 +64,7 @@ class SuiteExample extends FunSuite {
   }
 
   test("Leer archivo"){
-    val url = "/home/s4n/Documents/scala-drone/src/main/resources/in/in01.txt"
+    val url = "src/main/resources/in/in01.txt"
     val instrucciones = InterpretacionAlgebraServicioArchivo.leerArchivo(url)
 
     assert(instrucciones == List("AAAAIAAD", "DDAIAD", "AAIADAD", "AAADAIA", "DAAIAIAA", "AAIDIADDA", "AAADIDDA", "DAADAIIA", "IIIIDADDAA", "AADAAIAA"))
@@ -78,7 +78,7 @@ class SuiteExample extends FunSuite {
   }
 
   test("Convertir archivo en Ruta (Lista de Entregas)"){
-    val url = "/home/s4n/Documents/scala-drone/src/main/resources/in/in01.txt"
+    val url = "src/main/resources/in/in01.txt"
     val listaInstrucciones = InterpretacionAlgebraServicioArchivo
       .archivoAListaInstrucciones(InterpretacionAlgebraServicioArchivo.leerArchivo(url))
 
