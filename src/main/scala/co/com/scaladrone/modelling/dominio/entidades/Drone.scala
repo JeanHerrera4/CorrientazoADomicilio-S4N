@@ -47,4 +47,4 @@ case class O() extends Orientacion
 
 case class EstadoDrone(coordenada: Coordenada, orientacion: Orientacion)
 
-case class Drone (posicionActual: EstadoDrone)
+case class Drone (identificador: Int, posicionActual: EstadoDrone, capacidad: Int)
