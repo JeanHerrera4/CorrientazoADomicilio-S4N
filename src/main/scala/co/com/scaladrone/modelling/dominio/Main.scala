@@ -12,6 +12,9 @@ object Main extends App {
 
   val droneInicial = Drone(EstadoDrone(Coordenada(0,0),N()))
 
+  //val uno = InterpretacionAlgebraServicioDrone.avanzar(droneInicial)
+  //println(uno)
+
   val prueba = "DDAIAD"
   var estadoActual: EstadoDrone = new EstadoDrone(Coordenada(0,0),N())
 
@@ -22,7 +25,7 @@ object Main extends App {
   //println(res2)
 
   println("----------------------------------")
-  val res3 = InterpretacionAlgebraServicioArchivo.leerArchivo("/home/s4n/Documents/scala-drone/src/main/resources/in01.txt")
+  val res3 = InterpretacionAlgebraServicioArchivo.leerArchivo("/home/s4n/Documents/scala-drone/src/main/resources/in/in01.txt")
   println(res3)
 
   println("----------------------------------")
@@ -30,5 +33,7 @@ object Main extends App {
   val res5 = res4.fold[List[Drone]](x=>{List(Drone(EstadoDrone(Coordenada(0,0),N())))}, y=>{InterpretacionAlgebraServicioDrone.realizarEntregas(y, droneInicial)})
   //val res5 = InterpretacionAlgebraServicioDrone.realizarEntregas(res4, droneInicial)
   println(res5)
+
+  val res6 = InterpretacionAlgebraServicioArchivo.exportarArchivo(res5)
 
 }

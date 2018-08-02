@@ -1,8 +1,10 @@
 package co.com.scaladrone
 
 import co.com.scaladrone.modelling.dominio.entidades._
-import co.com.scaladrone.modelling.dominio.servicios.InterpretacionAlgebraServicioDrone
+import co.com.scaladrone.modelling.dominio.servicios.{InterpretacionAlgebraServicioArchivo, InterpretacionAlgebraServicioDrone}
 import org.scalatest.FunSuite
+
+import scala.util.Success
 
 class SuiteExample extends FunSuite {
 
@@ -59,5 +61,38 @@ class SuiteExample extends FunSuite {
                     Drone(EstadoDrone(Coordenada(-1, 3), S())),
                     Drone(EstadoDrone(Coordenada(0, 0), O()))
     ))
+  }
+
+  test("Leer archivo"){
+    val url = "/home/s4n/Documents/scala-drone/src/main/resources/in/in01.txt"
+    val instrucciones = InterpretacionAlgebraServicioArchivo.leerArchivo(url)
+
+    assert(instrucciones == List("AAAAIAAD", "DDAIAD", "AAIADAD", "AAADAIA", "DAAIAIAA", "AAIDIADDA", "AAADIDDA", "DAADAIIA", "IIIIDADDAA", "AADAAIAA"))
+  }
+
+  test("Convertir un caracter a una Instruccion"){
+    val listaString = "AAIADAID"
+    val instrucciones = InterpretacionAlgebraServicioArchivo.caracterAInstruccion(listaString)
+
+    assert(instrucciones == Entrega(List(A(), A(), I(), A(), D(), A(), I(), D())))
+  }
+
+  test("Convertir archivo en Ruta (Lista de Entregas)"){
+    val url = "/home/s4n/Documents/scala-drone/src/main/resources/in/in01.txt"
+    val listaInstrucciones = InterpretacionAlgebraServicioArchivo
+      .archivoAListaInstrucciones(InterpretacionAlgebraServicioArchivo.leerArchivo(url))
+
+    assert(listaInstrucciones == Success(Ruta(
+                                    List(
+                                      Entrega(List(A(), A(), A(), A(), I(), A(), A(), D())),
+                                      Entrega(List(D(), D(), A(), I(), A(), D())),
+                                      Entrega(List(A(), A(), I(), A(), D(), A(), D())),
+                                      Entrega(List(A(), A(), A(), D(), A(), I(), A())),
+                                      Entrega(List(D(), A(), A(), I(), A(), I(), A(), A())),
+                                      Entrega(List(A(), A(), I(), D(), I(), A(), D(), D(), A())),
+                                      Entrega(List(A(), A(), A(), D(), I(), D(), D(), A())),
+                                      Entrega(List(D(), A(), A(), D(), A(), I(), I(), A())),
+                                      Entrega(List(I(), I(), I(), I(), D(), A(), D(), D(), A(), A())),
+                                      Entrega(List(A(), A(), D(), A(), A(), I(), A(), A()))))))
   }
 }
