@@ -60,7 +60,9 @@ sealed trait InterpretacionAlgebraServicioArchivo extends AlgebraServicioArchivo
     }
   }
 
-  override def exportarArchivo(listDrone: List[Drone]): Unit = {
+  override def exportarArchivo(listDrone: List[Drone]) = {
+
+    //val impresora = new PrintWriter(new File(s"src/main/resources/out/out${listDrone}"))
 
     val impresora = new PrintWriter(new File(s"src/main/resources/out/out${listDrone.head.identificador}.txt"))
     impresora.write("== Reporte de entregas ==")
@@ -68,20 +70,21 @@ sealed trait InterpretacionAlgebraServicioArchivo extends AlgebraServicioArchivo
       val posX = x.posicionActual.coordenada.x
       val posY = x.posicionActual.coordenada.y
       val orientacion = convertirOrientacionAString(x.posicionActual.orientacion)
-      impresora.write(s"\n($posX,$posY) dirección $orientacion")
+      impresora.write(s"\n($posX, $posY) dirección $orientacion")
     })
     impresora.close()
+
   }
 
 
   override def exportarArchivos(listaDrone: List[List[Drone]]): Unit = {
-
     listaDrone.map(x => exportarArchivo(x))
   }
-
-
 }
 
 // Trait Object
 object InterpretacionAlgebraServicioArchivo extends InterpretacionAlgebraServicioArchivo
+
+// Lista de tuplas con Drones y archivo
+// Con la tupla Drone y Ruta se hace el paralelismo
 

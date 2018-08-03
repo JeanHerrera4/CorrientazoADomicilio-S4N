@@ -9,8 +9,6 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Source
 import scala.util.{Success, Try}
 
-// Necesidad del Drone al cual se le va a aplicar las funciones y la lógica
-// Cohesión en servicio (Servicios diferentes)
 // Mejor girar que girar derecha e izquierda (Sugerencia)
 
 
@@ -20,8 +18,8 @@ sealed trait AlgebraServicioDrone {
   def avanzar(drone: Drone): Drone
   def mover(instruccion: Instruccion, drone: Drone): Drone
   def realizarEntrega(entrega: Entrega, drone: Drone): Drone
-  def realizarEntregas(ruta: Ruta, drone: Drone): Future[List[Drone]]
-  def realizarPedidos(periplo: Periplo): List[Future[List[Drone]]]
+  def realizarEntregas(ruta: Ruta, drone: Drone)
+  def realizarPedidos(periplo: Periplo)
   def entregarAlmuerzos(url: String)
   def enviarDomicilios(listaUrl: List[String])
 }
@@ -29,6 +27,7 @@ sealed trait AlgebraServicioDrone {
   sealed trait InterpretacionAlgebraServicioDrone extends AlgebraServicioDrone{
 
     val estadoInicial = EstadoDrone(Coordenada(0,0),N())
+    implicit val ecParaRealizarPedidos = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(20))
 
     override def girarDerecha(drone: Drone): Drone = {
       val x = drone.posicionActual.orientacion match{
@@ -38,7 +37,6 @@ sealed trait AlgebraServicioDrone {
         case O() => N()
       }
       val res = Drone(drone.identificador,EstadoDrone(drone.posicionActual.coordenada, x),drone.capacidad)
-      //println(res)
       res
     }
 
@@ -50,7 +48,6 @@ sealed trait AlgebraServicioDrone {
         case O() => S()
       }
       val res = Drone(drone.identificador,EstadoDrone(drone.posicionActual.coordenada, x),drone.capacidad)
-      //println(res)
       res
     }
 
@@ -67,41 +64,6 @@ sealed trait AlgebraServicioDrone {
         case O() => Drone(drone.identificador, EstadoDrone(Coordenada(x - 1, y), drone.posicionActual.orientacion), drone.capacidad)
 
       }
-
-      /*drone.posicionActual.orientacion match {
-        case N() => {
-          if (drone.posicionActual.coordenada.y == 10)
-            Right {
-              Drone(EstadoDrone(Coordenada(x, y + 1), drone.posicionActual.orientacion))
-            }
-          else
-            Left("La posición en la coordenada no puede tener valores mayores a 10")
-        }
-        case S() => {
-          if (drone.posicionActual.coordenada.y == -10)
-            Right {
-              Drone(EstadoDrone(Coordenada(x, y - 1), drone.posicionActual.orientacion))
-            }
-          else
-            Left("La posición en la coordenada no puede tener valores menores a -10")
-        }
-        case E() => {
-          if (drone.posicionActual.coordenada.x == 10)
-            Right {
-              Drone(EstadoDrone(Coordenada(x + 1, y), drone.posicionActual.orientacion))
-            }
-          else
-            Left("La posición en la coordenada no puede tener valores mayores a 10")
-        }
-        case O() => {
-          if (drone.posicionActual.coordenada.x == -10)
-            Right {
-              Drone(EstadoDrone(Coordenada(x - 1, y), drone.posicionActual.orientacion))
-            }
-          else
-            Left("La posición en la coordenada no puede tener valores mayores a -10")
-        }
-      }*/
     }
 
 
@@ -114,11 +76,13 @@ sealed trait AlgebraServicioDrone {
       }
     }
 
-   override def realizarEntrega(entrega: Entrega, drone: Drone): Drone = {
+    /*def moverAlMismoTiempo(drone: Drone, ruta: Ruta)(implicit executionContext: ExecutionContext): Future[List[Drone]] =
+      Future(mover(drone, ruta))*/
 
-     /*entrega
-       .movimientos
-       .scanLeft(drone)((estado, instru) => mover(instru, estado))*/
+    /*def moverDronesAlTiempo(drone: Drone, ruta: Ruta)(implicit executionContext: ExecutionContext):
+      Future[List[Drone]] = Future(realizarEntregas(ruta, drone))*/
+
+   override def realizarEntrega(entrega: Entrega, drone: Drone): Drone = {
 
       entrega
         .movimientos
@@ -126,28 +90,34 @@ sealed trait AlgebraServicioDrone {
 
     }
 
-    override def realizarEntregas(ruta: Ruta, drone: Drone): Future[List[Drone]] = {
+    override def realizarEntregas(ruta: Ruta, drone: Drone) = {
 
-      Future(ruta.pedidos.scanLeft(drone)((x,y) => realizarEntrega(y,x)).tail)
+      implicit val ecParaRealizarPedidos = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(20))
+      Future(InterpretacionAlgebraServicioArchivo.exportarArchivo(ruta.pedidos.scanLeft(drone)((x,y) => realizarEntrega(y,x)).tail))
 
     }
-    implicit val ecParaRealizarPedidos = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(20))
 
-    override def realizarPedidos(periplo: Periplo): List[Future[List[Drone]]] = {
+    override def realizarPedidos(periplo: Periplo) = {
       val x:List[Int] = Range(1, periplo.rutas.size + 1).toList
       val y = periplo.rutas.zip(x)
       y.map(x => realizarEntregas(x._1, Drone(x._2, EstadoDrone(Coordenada(0,0),N()),10)))
     }
 
-    override def entregarAlmuerzos(url: String): Unit = {
+    override def entregarAlmuerzos(url: String) = {
 
       val droneInicial = Drone(1,EstadoDrone(Coordenada(0,0),N()),10)
       var estadoActual: EstadoDrone = new EstadoDrone(Coordenada(0,0),N())
 
       val a = InterpretacionAlgebraServicioArchivo.leerArchivo(url)
       val res1 = InterpretacionAlgebraServicioArchivo.archivoAListaInstrucciones(a)
-      val res2 = res1.fold[List[Drone]](x=>{List(Drone(1,EstadoDrone(Coordenada(0,0),N()),10))}, y=>{InterpretacionAlgebraServicioDrone.realizarEntregas(y, droneInicial)})
-      val res3 = InterpretacionAlgebraServicioArchivo.exportarArchivo(res2)
+      val res2 = res1.fold(x=>{List(Drone(1,EstadoDrone(Coordenada(0,0),N()),10))}, y=>{InterpretacionAlgebraServicioDrone.realizarEntregas(y, droneInicial)})
+      //val res3 = InterpretacionAlgebraServicioArchivo.exportarArchivo(res2)
+
+     /* val r =res1.fold[List[Drone]](x=>{List(Drone(1,EstadoDrone(Coordenada(0,0),N()),10))}, y=>{InterpretacionAlgebraServicioDrone
+        .realizarEntregas(y, droneInicial)
+        .map(listDrones => InterpretacionAlgebraServicioArchivo.exportarArchivo(listDrones))})
+      val t = InterpretacionAlgebraServicioDrone.realizarEntregas()
+      InterpretacionAlgebraServicioArchivo.exportarArchivo(r)*/
     }
 
     override def enviarDomicilios(listaUrl: List[String]): Unit = {
@@ -156,8 +126,10 @@ sealed trait AlgebraServicioDrone {
 
       val a = InterpretacionAlgebraServicioArchivo.leerArchivos(listaUrl)
       val res1 = InterpretacionAlgebraServicioArchivo.archivosAListasInstrucciones(a)
-      val res2 = res1.fold[List[List[Drone]]](x=>{List(List(Drone(1,EstadoDrone(Coordenada(0,0),N()),10)))}, y=>{InterpretacionAlgebraServicioDrone.realizarPedidos(y)})
-      val res3 = InterpretacionAlgebraServicioArchivo.exportarArchivos(res2)
+      println(res1)
+      val res2 = res1.fold(x=>{List(List(Drone(1,EstadoDrone(Coordenada(0,0),N()),10)))}, y=>{InterpretacionAlgebraServicioDrone.realizarPedidos(y)})
+      println(res2)
+      //val res3 = InterpretacionAlgebraServicioArchivo.exportarArchivos(res2)
     }
 
 }
